@@ -38,9 +38,6 @@ const CartProvider: React.FC = ({ children }) => {
       if (storedProducts) {
         setProducts([...JSON.parse(storedProducts)]);
       }
-
-      // const inStorage = await AsyncStorage.getItem('gotMarketplace');
-      console.log(JSON.parse(storedProducts));
     }
 
     loadProducts();
@@ -52,31 +49,34 @@ const CartProvider: React.FC = ({ children }) => {
         return p.id === product.id;
       });
 
-      // console.log(isProductInCart);
+      if (isProductInCart) {
+        const updatedCart = products.map(p => {
+          return p.id === product.id
+            ? { ...product, quantity: p.quantity + 1 }
+            : p;
+        });
 
-      // eslint-disable-next-line no-extra-boolean-cast
-      if (!!isProductInCart) {
-        setProducts(
-          products.map(p => {
-            return p.id === product.id
-              ? { ...product, quantity: p.quantity + 1 }
-              : p;
-          }),
+        setProducts(updatedCart);
+
+        await AsyncStorage.setItem(
+          'gotMarketplace:cart',
+          JSON.stringify(updatedCart),
         );
       } else {
         // get the array or products and add a new object to it that has all properties from product
         // and adds one to the property quantity
-        setProducts([...products, { ...product, quantity: 1 }]);
+        const updatedCart = [...products, { ...product, quantity: 1 }];
+
+        setProducts(updatedCart);
+        await AsyncStorage.setItem(
+          'gotMarketplace:cart',
+          JSON.stringify(updatedCart),
+        );
         // console.log(products);
       }
 
-      await AsyncStorage.setItem(
-        'gotMarketplace:cart',
-        JSON.stringify(products),
-      );
-
-      const inStorage = await AsyncStorage.getItem('gotMarketplace');
-      console.log(JSON.parse(inStorage));
+      // const inStorage = await AsyncStorage.getItem('gotMarketplace');
+      // console.log(JSON.parse(inStorage));
     },
     [products],
   );
@@ -89,9 +89,10 @@ const CartProvider: React.FC = ({ children }) => {
 
       setProducts(newProducts);
 
-      await AsyncStorage.setItem('gotMarketplace', JSON.stringify(products));
-      const inStorage = await AsyncStorage.getItem('gotMarketplace');
-      console.log(JSON.parse(inStorage));
+      await AsyncStorage.setItem(
+        'gotMarketplace:cart',
+        JSON.stringify(newProducts),
+      );
     },
 
     [products],
@@ -111,9 +112,6 @@ const CartProvider: React.FC = ({ children }) => {
         'gotMarketplace',
         JSON.stringify(updatedProducts),
       );
-
-      const inStorage = await AsyncStorage.getItem('gotMarketplace');
-      console.log(JSON.parse(inStorage));
     },
     [products],
   );
